@@ -22,3 +22,36 @@ MySQL 데이터베이스와 Express.js 프레임워크를 기반으로 구성되
 ```bash
 npm install
 ```
+
+### 2️⃣ 환경 변수 설정 (.env)
+
+```
+PORT=5000
+DB_HOST=localhost
+DB_USER=root
+DB_PASS=yourpassword
+DB_NAME=mydb
+JWT_SECRET=your_jwt_secret_here
+```
+
+### 3️⃣ MySQL 데이터베이스 및 테이블 생성
+
+```
+CREATE DATABASE mydb;
+
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 4️⃣ 서버 실행
+
+```
+npm start
+# 또는
+node app.js
+```
