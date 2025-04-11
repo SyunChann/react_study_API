@@ -15,6 +15,35 @@ MySQL 데이터베이스를 사용하며, Express.js 프레임워크를 기반�
 
 ---
 
-## 📂 프로젝트 구조
+## ⚙️ 설치 및 실행 방법
 
-api_server/ ├── controllers/ # 비즈니스 로직 (회원가입 처리 등) │ └── authController.js ├── models/ # DB 모델 (현재 User.js만 존재) │ └── User.js ├── routes/ # 라우터 정의 │ └── authRoutes.js ├── db.js # DB 연결 설정 ├── app.js # 서버 초기화 및 라우터 설정 ├── .env # 환경 변수 파일 ├── package.json └── .gitignore
+### 1. 의존성 설치
+
+```bash
+npm install
+```
+
+---
+
+PORT=5000
+DB_HOST=localhost
+DB_USER=root
+DB_PASS=yourpassword
+DB_NAME=mydb
+JWT_SECRET=your_jwt_secret_here
+
+---
+
+CREATE DATABASE mydb;
+
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+npm start
+# 또는
+node app.js
