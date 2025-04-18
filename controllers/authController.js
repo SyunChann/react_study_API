@@ -35,7 +35,7 @@ exports.registerUser = async (req, res) => {
 
 
 //카카오 회원가입 테스트
-exports.kakaoAuth = async (req, res) => {
+exports.kakaoSignup = async (req, res) => {
   const { code } = req.body;
 
   try {
