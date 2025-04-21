@@ -60,7 +60,7 @@ exports.kakaoSignup = async (req, res) => {
 
     const kakaoData = userRes.data;
     console.log('[카카오 응답]', kakaoData);
-    
+
     const kakaoId = kakaoData.id;
     const email = kakaoData.kakao_account?.email;
     const name = kakaoData.kakao_account?.profile?.nickname;
