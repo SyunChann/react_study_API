@@ -3,6 +3,7 @@ const db = require('../db');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 
+// 일반 회원가입 (local)
 exports.registerUser = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -35,7 +36,7 @@ exports.registerUser = async (req, res) => {
 };
 
 
-// 카카오 회원가입
+// 카카오 회원가입 (kakao)
 exports.kakaoSignup = async (req, res) => {
   const { code } = req.body;
 
