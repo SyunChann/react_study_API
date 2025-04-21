@@ -1,5 +1,7 @@
 const bcrypt = require('bcrypt');
 const db = require('../db');
+const axios = require('axios');
+const jwt = require('jsonwebtoken');
 
 exports.registerUser = async (req, res) => {
   const { name, email, password } = req.body;
@@ -33,8 +35,7 @@ exports.registerUser = async (req, res) => {
 };
 
 
-
-//카카오 회원가입 테스트
+// 카카오 회원가입
 exports.kakaoSignup = async (req, res) => {
   const { code } = req.body;
 
@@ -58,11 +59,18 @@ exports.kakaoSignup = async (req, res) => {
     });
 
     const kakaoData = userRes.data;
+    console.log('[카카오 응답]', kakaoData);
+    
     const kakaoId = kakaoData.id;
-    const email = kakaoData.kakao_account.email;
-    const name = kakaoData.kakao_account.profile.nickname;
+    const email = kakaoData.kakao_account?.email;
+    const name = kakaoData.kakao_account?.profile?.nickname;
 
-    // 3. MySQL에서 카카오 ID or 이메일로 기존 유저 확인
+    if (!email || !name) {
+      console.error('카카오 이메일 또는 닉네임 없음:', kakaoData.kakao_account);
+      return res.status(400).json({ message: '카카오 계정 정보가 충분하지 않습니다.' });
+    }
+
+    // 3. DB 중복 확인
     const [existingUsers] = await db
       .promise()
       .query("SELECT * FROM users WHERE kakao_id = ? OR email = ?", [kakaoId, email]);
@@ -70,24 +78,37 @@ exports.kakaoSignup = async (req, res) => {
     let user;
 
     if (existingUsers.length > 0) {
-      user = existingUsers[0]; // 이미 존재하는 유저
+      user = existingUsers[0];
+    
+      // ✅ 이미 가입된 유저
+      return res.status(200).json({
+        message: '이미 가입된 사용자입니다.',
+        user,
+        status: 'exists',
+      });
     } else {
-      // 4. 신규 유저 등록
-      await db
-        .promise()
-        .query("INSERT INTO users (name, email, kakao_id, provider) VALUES (?, ?, ?, ?)", [
-          name,
-          email,
-          kakaoId,
-          'kakao',
-        ]);
-
-      // 새로 등록된 유저 정보 조회
+      // 신규 가입 처리
+      await db.promise().query(
+        "INSERT INTO users (name, email, kakao_id, provider) VALUES (?, ?, ?, ?)",
+        [name, email, kakaoId, 'kakao']
+      );
+    
       const [newUser] = await db
         .promise()
         .query("SELECT * FROM users WHERE kakao_id = ?", [kakaoId]);
-
+    
       user = newUser[0];
+    
+      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+        expiresIn: '7d',
+      });
+    
+      return res.status(201).json({
+        message: '회원가입 성공',
+        token,
+        user,
+        status: 'new',
+      });
     }
 
     // 5. JWT 발급
@@ -95,7 +116,6 @@ exports.kakaoSignup = async (req, res) => {
       expiresIn: '7d',
     });
 
-    // 프론트에 전달 (ex: localStorage 저장 or HttpOnly 쿠키 설정)
     res.json({ token, user });
   } catch (err) {
     console.error("카카오 인증 오류:", err);
