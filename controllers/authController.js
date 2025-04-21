@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const db = require('../db');
+const axios = require('axios');
 
 exports.registerUser = async (req, res) => {
   const { name, email, password } = req.body;
