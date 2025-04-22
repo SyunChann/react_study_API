@@ -1,17 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, loginUser, kakaoSignup  } = require('../controllers/authController');
+const { registerUser, loginUser, authWithKakao } = require('../controllers/authController');
 
-// 회원가입
+// 일반 회원가입
 router.post('/signup', registerUser);
 
-// 카카오 회원가입
-router.post('/auth/kakao/signup', kakaoSignup);
+// 카카오 인증 통합
+router.post('/auth/kakao', authWithKakao);
 
-// 로그인 (테스트로 인한 주석)
+// 일반 로그인 - 구현 시 주석 해제
 // router.post('/login', loginUser);
-
-//카카오 회원가입
-router.post('/auth/kakao/signup', kakaoSignup);
 
 module.exports = router;
