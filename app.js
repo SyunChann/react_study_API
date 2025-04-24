@@ -10,7 +10,10 @@ app.use(cors());
 app.use(express.json());
 
 const authRoutes = require('./routes/authRoutes');
-app.use('/api', authRoutes); // Route Add
+const socialRoutes = require('./routes/socialRoutes');
+
+app.use('/api', authRoutes);      // 기본 회원가입/로그인
+app.use('/api', socialRoutes);    // 소셜 로그인 (카카오/구글)
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
