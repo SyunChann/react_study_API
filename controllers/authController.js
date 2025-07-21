@@ -1,6 +1,5 @@
 const bcrypt = require('bcrypt');
-const db = require('../db');
-const axios = require('axios');
+const supabase = require('../db');
 const jwt = require('jsonwebtoken');
 
 // 일반 회원가입 (local)
@@ -14,8 +13,13 @@ exports.registerUser = async (req, res) => {
 
   try {
     // 이메일 중복 확인
-    const [user] = await db.promise().query('SELECT * FROM users WHERE email = ?', [email]);
-    if (user.length > 0) {
+    const { data: existingUser, error: selectError } = await supabase
+      .from('users')
+      .select('email')
+      .eq('email', email)
+      .single();
+
+    if (existingUser) {
       return res.status(409).json({ message: '이미 등록된 이메일입니다.' });
     }
 
@@ -23,10 +27,13 @@ exports.registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // DB 저장
-    await db.promise().query(
-      'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-      [name, email, hashedPassword]
-    );
+    const { data, error: insertError } = await supabase
+      .from('users')
+      .insert([{ name, email, password: hashedPassword }]);
+
+    if (insertError) {
+      throw insertError;
+    }
 
     res.status(201).json({ message: '회원가입 성공' });
   } catch (err) {
@@ -47,16 +54,15 @@ exports.loginUser = async (req, res) => {
 
   try {
     // 2) 사용자 조회
-    const [rows] = await db.promise().query(
-      'SELECT * FROM users WHERE email = ?', [email]
-    );
+    const { data: user, error: selectError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
 
-    if (rows.length === 0) {
-      // 등록된 이메일이 없음
+    if (selectError || !user) {
       return res.status(401).json({ message: '등록되지 않은 이메일이거나 비밀번호가 틀렸습니다.' });
     }
-
-    const user = rows[0];
 
     // 3) 비밀번호 검증
     const valid = await bcrypt.compare(password, user.password);

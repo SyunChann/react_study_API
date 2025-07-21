@@ -1,15 +1,16 @@
 # 📦 React Study API Server
 
-React 프로젝트에서 사용할 회원가입 및 로그인 기능을 위한 Node.js 백엔드 서버입니다.  
-MySQL 데이터베이스와 Express.js 프레임워크를 기반으로 구성되어 있습니다.
+React 프로젝트에서 사용할 회원가입 및 로그인 기능을 위한 Node.js 백엔드 서버입니다.
+Supabase 데이터베이스와 Express.js 프레임워크를 기반으로 구성되어 있습니다.
 
 ---
 
 ## 🚀 주요 기능
 
-- ✅ 이메일 기반 회원가입 API (`/api/signup`)
+- ✅ 이메일 기반 회원가입 API ( `/api/signup`)
+- ✅ 소셜 로그인 (Google, Kakao)
 - ✅ 비밀번호 bcrypt 암호화 처리
-- ✅ MySQL 연동 및 사용자 정보 저장
+- ✅ Supabase 연동 및 사용자 정보 저장
 - ✅ `.env` 파일을 통한 환경 변수 분리
 - ✅ 구조화된 Express 라우터 구성 (`routes`, `controllers`, `models`)
 
@@ -27,24 +28,28 @@ npm install
 
 ```
 PORT=5000
-DB_HOST=localhost
-DB_USER=root
-DB_PASS=yourpassword
-DB_NAME=mydb
-JWT_SECRET=your_jwt_secret_here
+  SUPABASE_URL=your_supabase_url
+  SUPABASE_KEY=your_supabase_anon_key
+  JWT_SECRET=your_jwt_secret_here
+  GOOGLE_CLIENT_ID=your_google_client_id
+  GOOGLE_CLIENT_SECRET=your_google_client_secret
+  KAKAO_CLIENT_ID=your_kakao_client_id
+  KAKAO_CLIENT_SECRET=your_kakao_client_secret
 ```
 
 ### 3️⃣ MySQL 데이터베이스 및 테이블 생성
 
 ```
-CREATE DATABASE mydb;
-
+예시:
 CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  password VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255),
+  provider VARCHAR(50) DEFAULT 'local',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  kakao_id BIGINT UNIQUE,
+  google_id VARCHAR(255) UNIQUE
 );
 ```
 

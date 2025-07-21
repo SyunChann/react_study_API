@@ -21,3 +21,6 @@ build/
 # mysql dump/backup files
 *.sql
 *.dump
+
+# gemini
+.gemini/settings.json

@@ -1,4 +1,4 @@
-const db = require('../../db');
+const supabase = require('../../db');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 
@@ -34,64 +34,61 @@ exports.authWithKakao = async (req, res) => {
       return res.status(400).json({ message: '카카오 계정 정보가 충분하지 않습니다.' });
     }
 
-    const [existingUsers] = await db
-      .promise()
-      .query("SELECT * FROM users WHERE kakao_id = ? OR email = ?", [kakaoId, email]);
-
-    let user;
+    const { data: existingUser, error: selectError } = await supabase
+      .from('users')
+      .select('*')
+      .or(`kakao_id.eq.${kakaoId},email.eq.${email}`)
+      .single();
 
     // 로그인 시도
     if (mode === 'login') {
-      if (existingUsers.length === 0) {
+      if (selectError || !existingUser) {
         return res.status(404).json({
           message: '등록되지 않은 사용자입니다.',
           status: 'not_found'
         });
       }
 
-      user = existingUsers[0];
-
-      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      const token = jwt.sign({ userId: existingUser.id }, process.env.JWT_SECRET, {
         expiresIn: '7d',
       });
 
       return res.status(200).json({
         message: '로그인 성공',
         token,
-        user,
+        user: existingUser,
         status: 'login',
       });
     }
 
     // 회원가입 시도
-    if (existingUsers.length > 0) {
+    if (existingUser) {
       return res.status(200).json({
         message: '이미 가입된 사용자입니다.',
-        user: existingUsers[0],
+        user: existingUser,
         status: 'exists',
       });
     }
 
     // 신규 가입
-    await db.promise().query(
-      "INSERT INTO users (name, email, kakao_id, provider) VALUES (?, ?, ?, ?)",
-      [name, email, kakaoId, 'kakao']
-    );
+    const { data: newUser, error: insertError } = await supabase
+      .from('users')
+      .insert([{ name, email, kakao_id: kakaoId, provider: 'kakao' }])
+      .select()
+      .single();
 
-    const [newUser] = await db
-      .promise()
-      .query("SELECT * FROM users WHERE kakao_id = ?", [kakaoId]);
+    if (insertError) {
+      throw insertError;
+    }
 
-    user = newUser[0];
-
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET, {
       expiresIn: '7d',
     });
 
     return res.status(201).json({
       message: '회원가입 성공',
       token,
-      user,
+      user: newUser,
       status: 'new',
     });
 

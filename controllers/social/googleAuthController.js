@@ -1,4 +1,4 @@
-const db = require('../../db');
+const supabase = require('../../db');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 
@@ -29,56 +29,57 @@ exports.authWithGoogle = async (req, res) => {
     }
 
     // 3. 사용자 조회
-    const [existingUsers] = await db
-      .promise()
-      .query("SELECT * FROM users WHERE google_id = ? OR email = ?", [id, email]);
+    const { data: existingUser, error: selectError } = await supabase
+      .from('users')
+      .select('*')
+      .or(`google_id.eq.${id},email.eq.${email}`)
+      .single();
 
     // ✅ 로그인 시도일 경우
     if (mode === 'login') {
-      if (existingUsers.length === 0) {
+      if (selectError || !existingUser) {
         return res.status(404).json({
           message: '등록되지 않은 사용자입니다.',
           status: 'not_found'
         });
       }
 
-      const user = existingUsers[0];
-      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+      const token = jwt.sign({ userId: existingUser.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
       return res.status(200).json({
         message: '로그인 성공',
         token,
-        user,
+        user: existingUser,
         status: 'login',
       });
     }
 
     // ✅ 회원가입 시도일 경우
-    if (existingUsers.length > 0) {
+    if (existingUser) {
       return res.status(200).json({
         message: '이미 가입된 사용자입니다.',
-        user: existingUsers[0],
+        user: existingUser,
         status: 'exists',
       });
     }
 
     // 4. 신규 가입 처리
-    await db.promise().query(
-      "INSERT INTO users (name, email, google_id, provider) VALUES (?, ?, ?, ?)",
-      [name, email, id, 'google']
-    );
+    const { data: newUser, error: insertError } = await supabase
+      .from('users')
+      .insert([{ name, email, google_id: id, provider: 'google' }])
+      .select()
+      .single();
 
-    const [newUser] = await db
-      .promise()
-      .query("SELECT * FROM users WHERE google_id = ?", [id]);
+    if (insertError) {
+      throw insertError;
+    }
 
-    const user = newUser[0];
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
     return res.status(201).json({
       message: '회원가입 성공',
       token,
-      user,
+      user: newUser,
       status: 'new',
     });
 
