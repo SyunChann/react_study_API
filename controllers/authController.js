@@ -35,7 +35,7 @@ exports.registerUser = async (req, res) => {
       throw insertError;
     }
 
-    res.status(201).json({ message: '회원가입 성공' });
+    res.status(201).json({ success: true, message: '회원가입 성공' });
   } catch (err) {
     console.error('회원가입 에러:', err);
     res.status(500).json({ message: '서버 오류 발생' });

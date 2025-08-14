@@ -31,7 +31,7 @@ exports.authWithKakao = async (req, res) => {
     const name = kakaoData.kakao_account?.profile?.nickname;
 
     if (!email || !name) {
-      return res.status(400).json({ message: '카카오 계정 정보가 충분하지 않습니다.' });
+      return res.status(400).json({ success: false, message: '카카오 계정 정보가 충분하지 않습니다.' });
     }
 
     const { data: existingUser, error: selectError } = await supabase
@@ -44,6 +44,7 @@ exports.authWithKakao = async (req, res) => {
     if (mode === 'login') {
       if (selectError || !existingUser) {
         return res.status(404).json({
+          success: false,
           message: '등록되지 않은 사용자입니다.',
           status: 'not_found'
         });
@@ -54,6 +55,7 @@ exports.authWithKakao = async (req, res) => {
       });
 
       return res.status(200).json({
+        success: true,
         message: '로그인 성공',
         token,
         user: existingUser,
@@ -64,6 +66,7 @@ exports.authWithKakao = async (req, res) => {
     // 회원가입 시도
     if (existingUser) {
       return res.status(200).json({
+        success: true,
         message: '이미 가입된 사용자입니다.',
         user: existingUser,
         status: 'exists',
@@ -86,6 +89,7 @@ exports.authWithKakao = async (req, res) => {
     });
 
     return res.status(201).json({
+      success: true,
       message: '회원가입 성공',
       token,
       user: newUser,
@@ -94,6 +98,6 @@ exports.authWithKakao = async (req, res) => {
 
   } catch (err) {
     console.error("카카오 인증 오류:", err?.response?.data || err);
-    return res.status(500).json({ message: "카카오 인증 실패" });
+    return res.status(500).json({ success: false, message: "카카오 인증 실패" });
   }
 };
