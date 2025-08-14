@@ -8,7 +8,7 @@ exports.registerUser = async (req, res) => {
 
   // 필수 값 확인
   if (!name || !email || !password) {
-    return res.status(400).json({ message: '이름, 이메일, 비밀번호는 필수입니다.' });
+    return res.status(400).json({ success: false, message: '이름, 이메일, 비밀번호는 필수입니다.' });
   }
 
   try {
@@ -20,25 +20,37 @@ exports.registerUser = async (req, res) => {
       .single();
 
     if (existingUser) {
-      return res.status(409).json({ message: '이미 등록된 이메일입니다.' });
+      return res.status(409).json({ success: false, message: '이미 등록된 이메일입니다.' });
     }
 
     // 비밀번호 암호화
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // DB 저장
-    const { data, error: insertError } = await supabase
+    // DB 저장 (users table)
+    const { data: newUser, error: insertUserError } = await supabase
       .from('users')
-      .insert([{ name, email, password: hashedPassword }]);
+      .insert([{ name, email, password: hashedPassword }])
+      .select()
+      .single();
 
-    if (insertError) {
-      throw insertError;
-    }
+    if (insertUserError) throw insertUserError;
 
-    res.status(201).json({ success: true, message: '회원가입 성공' });
+    // DB 저장 (social_identities table)
+    const { error: insertIdentityError } = await supabase
+      .from('social_identities')
+      .insert({
+        user_id: newUser.id,
+        provider: 'local',
+        provider_id: email,
+      });
+
+    if (insertIdentityError) throw insertIdentityError;
+
+    res.status(201).json({ success: true, message: '회원가입 성공. 로그인을 진행해주세요.' });
+
   } catch (err) {
-    console.error('회원가입 에러:', err);
-    res.status(500).json({ message: '서버 오류 발생' });
+    console.error('회원가입 에러:', err.message);
+    res.status(500).json({ success: false, message: '서버 오류 발생' });
   }
 };
 
@@ -49,7 +61,7 @@ exports.loginUser = async (req, res) => {
 
   // 1) 필수 값 확인
   if (!email || !password) {
-    return res.status(400).json({ message: '이메일과 비밀번호는 필수입니다.' });
+    return res.status(400).json({ success: false, message: '이메일과 비밀번호는 필수입니다.' });
   }
 
   try {
@@ -60,14 +72,15 @@ exports.loginUser = async (req, res) => {
       .eq('email', email)
       .single();
 
-    if (selectError || !user) {
-      return res.status(401).json({ message: '등록되지 않은 이메일이거나 비밀번호가 틀렸습니다.' });
+    // 사용자가 없거나, 비밀번호 필드가 null인 경우 (소셜 로그인 유저)
+    if (selectError || !user || !user.password) {
+      return res.status(401).json({ success: false, message: '이메일 또는 비밀번호가 틀렸습니다.' });
     }
 
     // 3) 비밀번호 검증
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-      return res.status(401).json({ message: '등록되지 않은 이메일이거나 비밀번호가 틀렸습니다.' });
+      return res.status(401).json({ success: false, message: '이메일 또는 비밀번호가 틀렸습니다.' });
     }
 
     // 4) JWT 발급
@@ -77,19 +90,16 @@ exports.loginUser = async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    // 5) 응답
+    // 5) 응답 (비밀번호 필드 제거)
+    delete user.password;
     return res.status(200).json({
+      success: true,
       message: '로그인 성공',
       token,
-      user: {
-        id:    user.id,
-        name:  user.name,
-        email: user.email,
-        provider: user.provider
-      }
+      user,
     });
   } catch (err) {
     console.error('로그인 에러:', err);
-    return res.status(500).json({ message: '서버 오류 발생' });
+    return res.status(500).json({ success: false, message: '서버 오류 발생' });
   }
 };
