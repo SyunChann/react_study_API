@@ -37,7 +37,7 @@ PORT=5000
   KAKAO_CLIENT_SECRET=your_kakao_client_secret
 ```
 
-### 3️⃣ MySQL 데이터베이스 및 테이블 생성
+### 3️⃣ SupaBase 데이터베이스 및 테이블 생성
 
 ```
 예시:
@@ -50,6 +50,22 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   kakao_id BIGINT UNIQUE,
   google_id VARCHAR(255) UNIQUE
+);
+
+-- 1. users 테이블 수정
+ALTER TABLE users
+  DROP COLUMN google_id,
+  DROP COLUMN kakao_id,
+  DROP COLUMN provider,
+  ALTER COLUMN password DROP NOT NULL;
+
+-- 2. social_identities 테이블 생성
+CREATE TABLE social_identities (
+  id BIGSERIAL PRIMARY KEY,
+  user_id INT4 NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  provider VARCHAR(50) NOT NULL,
+  provider_id VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
