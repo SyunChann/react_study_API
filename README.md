@@ -76,3 +76,9 @@ npm start
 # 또는
 node app.js
 ```
+
+### 5️⃣ Swagger API Docs
+
+```
+http://localhost:5000/api-docs
+```
