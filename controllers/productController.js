@@ -142,7 +142,7 @@ exports.getProductsByCategory = async (req, res) => {
 
 // 전체 상품 조회
 exports.getAllProducts = async (req, res) => {
-    try {
+    try { 
         const { data: products, error: getAllProductsError } = await supabase
             .from('products')
             .select('*');
