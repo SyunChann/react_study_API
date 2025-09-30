@@ -1,7 +1,10 @@
-const noticeController = require('./../controllers/noticeController');
+const express = require('express');
+const router = express.Router();
+const { createNotice,getAllNotices,getNoticeById,updateNotice,deleteNotice} = require('../controllers/noticeController');
 
-app.post('/api/notice',noticeController.createNotice);
-app.get('/api/notice',noticeController.getAllNotices);
-app.get('/api/notice/:id',noticeController.getNoticeById);
-app.patch('/api/notice/:id',noticeController.updateNotice);
-app.delete('/api/notice/:id',noticeController.deleteNotice);
+router.post('/notice',createNotice);
+router.put('/notice/',getAllNotices)
+router.get('/notice/:id',getNoticeById);
+router.patch('/notice/:id',updateNotice);
+router.delete('/notice/:id',deleteNotice);
+
