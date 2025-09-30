@@ -5,6 +5,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const socialRoutes = require('./routes/socialRoutes');
 const productRoutes = require('./routes/productRoutes');
+const noticeRoutes = require('./routes/noticeRoutes')
 const swaggerUi = require('swagger-ui-express');
 const specs = require('./swagger/swagger');
 
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use('/api', authRoutes);      // 기본 회원가입/로그인
 app.use('/api', socialRoutes);    // 소셜 로그인 (카카오/구글)
 app.use('/api', productRoutes);   // 상품 CRUD라우트
+app.use('/api', noticeRoutes);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
