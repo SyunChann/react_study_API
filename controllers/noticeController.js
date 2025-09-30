@@ -3,7 +3,7 @@ const supabase = require('../db');
 
 // 등록
 exports.createNotice = async(req,res)=>{
-    const { title,content } = req.body;
+    const {title,content}= req.body;
 
     if(!title || !content){
         return res.status(400).json({success: false, message:'제목, 내용을 입력해주세요!'})
@@ -49,14 +49,14 @@ exports.getNoticeById = async (req,res) => {
     //조회(전체)
     exports.getAllNotices= async(req,res)=>{
         try{
-            const { data:notices , error:getAllProductsError } = await supabase
+            const { data:notices , error:getAllNoticesError } = await supabase
                 .from('notice')
                 .select('*');
             if(!notices || notices.length === 0){
-                return res.status(400).json({ success: false, message:'공지를 찾을 수 없습니다.' })
+                return res.status(200).json({ success: true, message:'등록된 공지가 없습니다.',data:[] })
             }
 
-            if(this.getAllNoticesError) throw getAllProductsError;
+            if(getAllNoticesError) throw getAllNoticesError;
 
             return res.json({success:true, data:notices});
         }catch(err){
@@ -71,7 +71,11 @@ exports.getNoticeById = async (req,res) => {
         const { id } = req.params;
         const { title, content } = req.body;
 
-        //payload: 실제로 업데이트에 보낼 내용물
+        if(title===undefined && content===undefined){
+            return res.status(400).json({success:false,message:'수정한 내용이 없습니다.'})
+        }
+
+        //payload: 실제로 업데이트에 보낼 내용물 
         const payload = {
             ...(title !== undefined && {title}),
             ...(content !== undefined && {content}),
@@ -87,7 +91,7 @@ exports.getNoticeById = async (req,res) => {
             .single(); 
             
             if(updateNoticeError) throw updateNoticeError;
-
+            return res.json({success:true,message:'수정성공',data:updatedNotice});
         }catch(err){
             console.error('수정 에러',err.message);
             res.status(500).json({success:false,message:'서버 오류 발생'});
@@ -100,7 +104,7 @@ exports.getNoticeById = async (req,res) => {
         try{
             const {data, error} = await supabase
             .from('notice')
-            .delete
+            .delete()
             .eq('notice_id',id)
             .select();
 
@@ -110,12 +114,12 @@ exports.getNoticeById = async (req,res) => {
             }
 
             if(!data||data.length ===0){
-                return res.status(404).json({success:false,message:"해당 상품이 없습니다."})
+                return res.status(404).json({success:false,message:"해당 공지사항이 없습니다."})
             }
-            return res.jon({success: true, message:'삭제 성공'});
+            return res.json({success: true, message:'삭제 성공'});
         }catch(err){
             console.error('삭제 실패',err);
-            return res.status(500).json({success:false,message:'서버 오류 발생'});
+            return res.status(500).json({success:false,message:'서버 오류 발생'})
         }
 
     }
