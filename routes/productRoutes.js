@@ -31,9 +31,11 @@ router.get('/product/by-name/:name', getProductByName);
 /**
  * 
  */
-router.get('/products/by-category/:catrgoty', getProductsByCategory);
+router.get('/products/by-category/:category', getProductsByCategory);
 
 /**
  * 
  */
 router.delete('/products/:id', deleteProduct);
+
+module.exports = router;

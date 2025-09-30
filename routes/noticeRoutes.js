@@ -8,3 +8,5 @@ router.get('/notice/:id',getNoticeById);
 router.patch('/notice/:id',updateNotice);
 router.delete('/notice/:id',deleteNotice);
 
+module.exports = router;
+
