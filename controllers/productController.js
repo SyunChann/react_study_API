@@ -69,12 +69,37 @@ exports.updateProduct = async (req, res) => {
     }
 }
 
+exports.deleteProduct = async (req, res) => {
+    const { id } = req.params;
+    try{
+        const { data, error } = await supabase
+        .from('product')
+        .delete
+        .eq('id', id)
+        .select();
+
+        if (error) {
+            console.error('상품 삭제 에러:', error);
+            return res.status(400).json({ success: false, message: '삭제 실패' });
+        }
+
+        if (!data || data.length === 0) {
+            return res.status(404).json({ success: false, message: '해당 상품이 없습니다.' });
+        }
+
+        return res.json({ success: true, message: '상품 삭제 성공'});
+    } catch (err) {
+        console.error('상품 삭제 실패:', err);
+        return res.status(500).json({ success: false, message: '서버 오류 발생' });
+    }
+}
+
 exports.getProductById = async (req, res) => {
     const { id } = req.params;
 
     try {
-            const { data: getProduct, error: getProductByIdError } = await supabase
-            .from('products')
+        const { data: getProduct, error: getProductByIdError } = await supabase
+            .from('product')
             .select('*')
             .eq('id', id)
             .single();
