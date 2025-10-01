@@ -121,7 +121,7 @@ exports.getProductByName = async (req, res) => {
 
     try {
         const { data: getProduct, error: getProductByIdError } = await supabase
-            .from('products')
+            .from('product')
             .select('*')
             .eq('name', name)
             .Single();
@@ -147,7 +147,7 @@ exports.getProductsByCategory = async (req, res) => {
 
     try {
         const { data: products, error: getByCategoryError } = await supabase
-            .from('products')
+            .from('product')
             .select('*')
             .contains('category', category);
 
@@ -167,21 +167,21 @@ exports.getProductsByCategory = async (req, res) => {
 
 // 전체 상품 조회
 exports.getAllProducts = async (req, res) => {
-    try { 
-        const { data: products, error: getAllProductsError } = await supabase
-            .from('products')
-            .select('*');
+    try {
+        const { data, error } = await supabase
+        .from('product')
+        .select('*');
 
-        if (!products || products.length === 0) {
-            return res.status(400).json({ success: false, message: '상품을 찾을 수 없습니다.'});
+        if (error) {
+            console.error('[Supabase error]', error);
+            return res.status(500).json({ success: false, message: 'DB 오류' });
         }
-        
-        if(getAllProductsError) throw getAllProductsError;
 
-        return res.json({ success: true, data: products });
+        return res.json({ success: true, data: data ?? [] });
     } catch (err) {
-        console.error('전체 상품 조회 실패:', err.message);
+        console.error('전체 상품 조회 실패:', err);
         return res.status(500).json({ success: false, message: '서버 오류 발생' });
     }
 };
+
 
