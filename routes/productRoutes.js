@@ -21,12 +21,12 @@ router.get('/products', getAllProducts);
 /**
  * 
  */
-router.get('/product/:id', getProductById);
+router.get('/products/:id', getProductById);
 
 /**
  * 
  */
-router.get('/product/by-name/:name', getProductByName);
+router.get('/products/by-name/:name', getProductByName);
 
 /**
  * 
