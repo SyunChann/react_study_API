@@ -21,7 +21,7 @@ exports.createNotice = async(req,res)=>{
             res.status(201).json({success:true,message:'공지등록 성공!',data:newNotice});
     }catch(err){
         console.error('공지등록 에러: ',err.message);
-        res.status(500).json({success: false, message:'서버 오류'})
+        res.status(500).json({success: false, message:'서버 오류'});
     }
 };
 
@@ -55,7 +55,6 @@ exports.getNoticeById = async (req,res) => {
             if(!notices || notices.length === 0){
                 return res.status(200).json({ success: true, message:'등록된 공지가 없습니다.',data:[] })
             }
-
             if(getAllNoticesError) throw getAllNoticesError;
 
             return res.json({success:true, data:notices});
@@ -102,18 +101,18 @@ exports.getNoticeById = async (req,res) => {
     exports.deleteNotice = async(req,res)=>{
         const { id } =req.params;
         try{
-            const {data, error} = await supabase
+            const {data:deleteNotice, error:deleteNoticeError} = await supabase
             .from('notice')
             .delete()
             .eq('notice_id',id)
             .select();
 
-            if(error){
-                console.error('공지사항 삭제 오류',error);
+            if(deleteNoticeError){
+                console.error('공지사항 삭제 오류',deleteNoticeError);
                 return res.status(400).json({success:false,message:'삭제 실패'});
             }
 
-            if(!data||data.length ===0){
+            if(!deleteNotice||deleteNotice.length ===0){
                 return res.status(404).json({success:false,message:"해당 공지사항이 없습니다."})
             }
             return res.json({success: true, message:'삭제 성공'});
