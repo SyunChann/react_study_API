@@ -33,9 +33,12 @@ exports.createProduct = async (req, res) => {
 };
 
 exports.updateProduct = async (req, res) => {
-    const {id, name, price, stock_quantity, categories, status } = req.body;
+    console.log('[PUT] params:', req.params);
+    console.log('[PUT] body:', req.body); 
+    const { id } = req.params;
+    const {name, price, stock_quantity, categories, status } = req.body;
 
-    if(!id || !name || !price || !stock_quantity || !categories || !status) {
+    if(!name || price === null || price === undefined || stock_quantity === null || stock_quantity === undefined || !categories || !status) {
         return res.status(400).json({ success: false, message: '비어있는 항목이 있습니다.' })
     }
 
@@ -52,17 +55,19 @@ exports.updateProduct = async (req, res) => {
 
         const { data: updateProduct, error: updateProductError } = await supabase
             .from('product')
-            .update.update({
+            .update({
                 name,
                 price,
                 stock_quantity,
                 categories,
-                statu
+                status
             })
             .eq('id', id)
             .single();
 
         if (updateProductError) throw updateProductError;
+
+        return res.json({ success: true, data: updateProduct });
     } catch(err) {
         console.error('상품수정 에러: ', err.message);
         res.status(500).json({ success: false, message: '서버 오류 발생' });
@@ -74,7 +79,7 @@ exports.deleteProduct = async (req, res) => {
     try{
         const { data, error } = await supabase
         .from('product')
-        .delete
+        .delete()
         .eq('id', id)
         .select();
 
@@ -109,7 +114,7 @@ exports.getProductById = async (req, res) => {
             return res.status(404).json({ success: false, message: '상품을 찾을 수 없습니다.' });
         }
 
-        return res.json({ success: true, data });
+        return res.json({ success: true, data: getProduct });
     } catch (err) {
         console.error('상품 아이디 조회 실패: ', err);
         return res.status(500).json({ success: false, message: '서버 오류 발생' });
@@ -124,7 +129,7 @@ exports.getProductByName = async (req, res) => {
             .from('product')
             .select('*')
             .eq('name', name)
-            .Single();
+            .single();
 
         if (getProductByIdError) {
             return res.status(400).json({ success: false, message: '상품을 찾을 수 없습니다' });
