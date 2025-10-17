@@ -1,14 +1,18 @@
 const supabase = require('../db');
 
+//임시
+const userId = 27;
+
 // 장바구니 조회(product조인)
 exports.getCart = async(req,res)=>{
     try{
-        const userId = req.user.userId;
+        // const userId = req.user.userId;
         const {data:getCart, error:getCartError}=await supabase
         .from('product_cart')
         .select(`id,product_id,user_id,quantity,
-            product:product_id(name,price)`)
-        .eq('user_id',userId);
+            product(name,price)`)
+        .eq('user_id',userId)
+        .order('id',{ascending:true});
 
         if(getCartError) throw getCartError;
 
@@ -17,7 +21,7 @@ exports.getCart = async(req,res)=>{
         }
         return res.json({success:true,data:getCart})
     }catch(err){
-        console.error('장바구니 조회 실패:',err.message);
+        console.error('장바구니 조회 실패:',err);
         return res.status(500).json({success:false,message:'서버오류'})
 
     }
@@ -28,7 +32,7 @@ exports.getCart = async(req,res)=>{
 // 없는 상품 -> new
 
 exports.addCart = async(req,res) =>{
-    const userId = req.user.userId;
+    // const userId = req.user.userId;
     const {productId,quantity} = req.body;
 
   try{
@@ -77,14 +81,17 @@ exports.addCart = async(req,res) =>{
 
 // 항목 삭제
 exports.deleteCart = async(req,res)=>{
-    const userId = req.user.userId;
+    // const userId = req.user.userId;
     const {cartId} = req.body;
+
+    // console.log('req.body',req.body);
     try{
         const { data:deleteCart,error:deleteCartError } = await supabase
         .from('product_cart')
         .delete()
         .eq('user_id',userId)
-        .eq('id',cartId);
+        .eq('id',cartId)
+        .select();
     
         if(deleteCartError){
             console.error('상품 삭제 오류',deleteCartError);
@@ -111,7 +118,7 @@ exports.deleteCart = async(req,res)=>{
 
 // 전체 삭제 
 exports.clearCart = async(req,res)=>{
-    const userId = req.user.userId;
+    // const userId = req.user.userId;
     try{
         const {data:clearCart,error:clearCartError} = await supabase
         .from('product_cart')
@@ -132,4 +139,29 @@ exports.clearCart = async(req,res)=>{
         return res.status(500).json({success:false,message:'서버 오류'});
 
     }
+};
+
+// 장바구니 수량 조절
+exports.updateCart = async(req,res)=>{
+    const {cartId, quantity} = req.body;
+    
+    try{
+        const {data:updateCart, error:updateCartError} = await supabase
+        .from('product_cart')
+        .update({quantity})
+        .eq('id',cartId)
+        .eq('user_id',userId)
+        .select();
+
+        if(updateCartError) throw updateCartError;
+        
+      
+        return res.json({success:true,message:'수정 성공',data:updateCart});
+
+    }catch(err){
+        console.error('수량 변경 실패:', err);
+        res.status(500).json({success:false,message:'서버 에러'});
+
+    }
+    
 };
