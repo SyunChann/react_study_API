@@ -1,12 +1,27 @@
 const supabase = require('../db');
 
-//임시
-const userId = 27;
+function getUserId(req,res){
+    const raw = 
+    req.headers['x-user-id'] ??
+    req.query?.userid ??
+    req.body?.userId;
+
+    if(!raw){
+        res.status(400).json({success:false,message:'userId가 없습니다.'});
+        throw new Error('Missing userId');
+    }
+    const n = Number(raw);
+    if(Number.isNaN(n)){
+        res.status(400).json({success:false,message:"잘못된 userId형식"});
+        throw new Error("Invalid userId");
+    }
+    return n;
+}
 
 // 장바구니 조회(product조인)
 exports.getCart = async(req,res)=>{
     try{
-        // const userId = req.user.userId;
+        const userId = getUserId(req,res);
         const {data:getCart, error:getCartError}=await supabase
         .from('product_cart')
         .select(`id,product_id,user_id,quantity,
@@ -32,7 +47,8 @@ exports.getCart = async(req,res)=>{
 // 없는 상품 -> new
 
 exports.addCart = async(req,res) =>{
-    // const userId = req.user.userId;
+    
+    const userId = getUserId(req,res);
     const {productId,quantity} = req.body;
 
   try{
@@ -81,10 +97,10 @@ exports.addCart = async(req,res) =>{
 
 // 항목 삭제
 exports.deleteCart = async(req,res)=>{
-    // const userId = req.user.userId;
+    const userId = getUserId(req,res);
     const {cartId} = req.body;
 
-    // console.log('req.body',req.body);
+
     try{
         const { data:deleteCart,error:deleteCartError } = await supabase
         .from('product_cart')
@@ -118,7 +134,7 @@ exports.deleteCart = async(req,res)=>{
 
 // 전체 삭제 
 exports.clearCart = async(req,res)=>{
-    // const userId = req.user.userId;
+     const userId = getUserId(req,res);
     try{
         const {data:clearCart,error:clearCartError} = await supabase
         .from('product_cart')
@@ -143,6 +159,7 @@ exports.clearCart = async(req,res)=>{
 
 // 장바구니 수량 조절
 exports.updateCart = async(req,res)=>{
+    const userId = getUserId(req,res);
     const {cartId, quantity} = req.body;
     
     try{
