@@ -82,6 +82,27 @@ exports.loginUser = async (req, res) => {
     if (!valid) {
       return res.status(401).json({ success: false, message: '이메일 또는 비밀번호가 틀렸습니다.' });
     }
+    // 프로바이더 추출
+    const {data: social, error: socialError } = await supabase
+      .from('social_identities')
+      .select('provider')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    // 조회 실패시 언노운 표시
+    let provider = 'UNKNOWN'
+
+    if (!socialError && social?.provider) {
+      provider = String(social.provider).toUpperCase();
+    }
+
+    // 필요 정보만 추출
+    const userInfo = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      provider
+    } 
 
     // 4) JWT 발급
     const token = jwt.sign(
@@ -96,7 +117,7 @@ exports.loginUser = async (req, res) => {
       success: true,
       message: '로그인 성공',
       token,
-      user,
+      user: userInfo,
     });
   } catch (err) {
     console.error('로그인 에러:', err);

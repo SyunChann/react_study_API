@@ -6,6 +6,15 @@ exports.authWithKakao = async (req, res) => {
   const { code } = req.body;
   const redirectUri = `http://localhost:3000/kakao-redirect`;
 
+  const PROVIDER = 'KAKAO'; // 이 라우트는 카카오 전용
+
+  const toUserInfo = (u, provider = PROVIDER) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    provider,
+  });
+
   try {
     // 1. Kakao 토큰 요청
     const tokenRes = await axios.post("https://kauth.kakao.com/oauth/token", null, {
@@ -50,7 +59,7 @@ exports.authWithKakao = async (req, res) => {
         success: true,
         message: '로그인 성공',
         token,
-        user,
+        user: toUserInfo(user, PROVIDER),
       });
     }
 
@@ -77,7 +86,7 @@ exports.authWithKakao = async (req, res) => {
         success: true,
         message: '기존 계정에 Kakao 계정을 연결하고 로그인했습니다.',
         token,
-        user: existingUser,
+        user: toUserInfo(existingUser, PROVIDER),
       });
     }
 
@@ -105,7 +114,7 @@ exports.authWithKakao = async (req, res) => {
       success: true,
       message: '새로운 계정을 생성하고 로그인했습니다.',
       token,
-      user: newUser,
+      user: toUserInfo(existingUser, PROVIDER),
     });
 
   } catch (err) {

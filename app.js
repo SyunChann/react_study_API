@@ -9,6 +9,8 @@ const noticeRoutes = require('./routes/noticeRoutes')
 const cartRoutes = require('./routes/cartRoutes')
 const swaggerUi = require('swagger-ui-express');
 const specs = require('./swagger/swagger');
+const userRoutes = require('./routes/userRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 
 dotenv.config();
 const app = express();
@@ -21,6 +23,8 @@ app.use('/api', socialRoutes);    // 소셜 로그인 (카카오/구글)
 app.use('/api', productRoutes);   // 상품 CRUD라우트
 app.use('/api', noticeRoutes);
 app.use('/api', cartRoutes);
+app.use('/api', userRoutes);
+app.use('/api',orderRoutes);
 
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));

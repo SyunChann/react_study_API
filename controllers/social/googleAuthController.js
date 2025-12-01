@@ -6,6 +6,16 @@ exports.authWithGoogle = async (req, res) => {
   const { code } = req.body;
   const redirectUri = `http://localhost:3000/google-redirect`;
 
+  const PROVIDER = 'GOOGLE'; // 이 라우트는 구글 전용
+
+  // 공통: 응답에 내려줄 user 형태(필요한 필드만)
+  const toUserInfo = (u, provider = PROVIDER) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    provider,            
+  });
+
   try {
     // 1. Google 토큰 요청
     const tokenRes = await axios.post('https://oauth2.googleapis.com/token', {
@@ -43,7 +53,8 @@ exports.authWithGoogle = async (req, res) => {
         success: true,
         message: '로그인 성공',
         token,
-        user,
+        // user,
+        user: toUserInfo(user, PROVIDER)
       });
     }
 
@@ -70,7 +81,8 @@ exports.authWithGoogle = async (req, res) => {
         success: true,
         message: '기존 계정에 Google 계정을 연결하고 로그인했습니다.',
         token,
-        user: existingUser,
+        // user: existingUser,
+        user: toUserInfo(existingUser, PROVIDER),
       });
     }
 
@@ -98,7 +110,7 @@ exports.authWithGoogle = async (req, res) => {
       success: true,
       message: '새로운 계정을 생성하고 로그인했습니다.',
       token,
-      user: newUser,
+      user: toUserInfo(existingUser, PROVIDER),
     });
 
   } catch (err) {
